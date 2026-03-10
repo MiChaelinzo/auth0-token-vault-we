@@ -1,14 +1,14 @@
-# Token Vault Dashboard
+# Token Vault Marketplace
 
-A secure, modern token management dashboard that demonstrates Auth0 Token Vault concepts with beautiful UI for managing API tokens, sessions, and security settings.
+A secure, modern token management dashboard combined with a vibrant marketplace where users can buy, sell, and trade API tokens with other developers and services.
 
 **Experience Qualities**:
 1. **Secure** - Every element communicates trust through clean design, clear security indicators, and professional aesthetics
-2. **Powerful** - The interface feels sophisticated with detailed token information, analytics, and comprehensive management tools
-3. **Intuitive** - Complex security concepts are made approachable through clear visual hierarchies and guided workflows
+2. **Dynamic** - The marketplace feels alive with real-time listings, trending tokens, and active trading
+3. **Intuitive** - Complex security and marketplace concepts are made approachable through clear visual hierarchies and guided workflows
 
-**Complexity Level**: Light Application (multiple features with basic state)
-This app manages tokens across multiple views with create/revoke operations, token details, and security settings - fitting the Light Application complexity tier.
+**Complexity Level**: Complex Application (advanced functionality with multiple views)
+This app manages personal tokens, facilitates marketplace transactions, handles user authentication, includes multiple specialized views (vault, marketplace, transactions, seller dashboard), and maintains transaction history - fitting the Complex Application complexity tier.
 
 ## Essential Features
 
@@ -40,6 +40,41 @@ This app manages tokens across multiple views with create/revoke operations, tok
 - **Progression**: Click refresh → Confirmation dialog explains impact → Confirm → New token value generated → Expiration extended by 30 days → Security event logged → Success notification with new token value
 - **Success criteria**: Refresh button only shows for eligible tokens, old token immediately invalidated, new value generated, expiration updated, security event created
 
+### Marketplace Browse
+- **Functionality**: Browse available token listings from other sellers with filtering, search, and sorting
+- **Purpose**: Enable discovery of pre-configured tokens for common services and specialized access
+- **Trigger**: Navigate to Marketplace tab
+- **Progression**: Click marketplace → View featured listings → Apply filters (type, price range, rating) → Search by service → Sort by popularity/price/newest → Click listing for details
+- **Success Criteria**: Listings load smoothly, filters work correctly, search is responsive, featured section highlights quality tokens
+
+### List Token for Sale
+- **Functionality**: Create marketplace listings to sell tokens to other users
+- **Purpose**: Allow users to monetize their API access or specialized tokens
+- **Trigger**: Click "List for Sale" on owned token or "Create Listing" button in marketplace
+- **Progression**: Select token → Set price → Add description and usage guidelines → Set listing duration → Preview listing → Publish → Listing appears in marketplace
+- **Success Criteria**: Only active tokens can be listed, price validation works, preview accurate, listing immediately searchable
+
+### Purchase Token
+- **Functionality**: Buy tokens from marketplace with simulated payment and instant delivery
+- **Purpose**: Enable quick acquisition of pre-configured access tokens
+- **Trigger**: Click "Buy Now" on marketplace listing
+- **Progression**: View listing details → Click buy → Review purchase summary → Confirm payment → Process transaction → Token transferred to vault → Seller notified → Receipt generated
+- **Success Criteria**: Transaction is atomic, token appears in buyer's vault, seller receives payment credit, purchase history updated
+
+### Transaction History
+- **Functionality**: View complete history of purchases and sales with transaction details
+- **Purpose**: Provide transparency and record-keeping for marketplace activity
+- **Trigger**: Navigate to Transactions tab
+- **Progression**: View transactions → Filter by type (bought/sold) → Search by token name → View transaction details → Download receipt
+- **Success Criteria**: All transactions logged, details accurate, timeline chronological, receipts downloadable
+
+### Seller Dashboard
+- **Functionality**: Analytics for sellers showing listing performance, sales metrics, and earnings
+- **Purpose**: Help sellers optimize their listings and track marketplace success
+- **Trigger**: Navigate to Seller Dashboard (for users with active listings)
+- **Progression**: View dashboard → See total earnings → Review listing performance → Check active vs sold listings → View buyer ratings
+- **Success Criteria**: Metrics update in real-time, charts visualize trends, insights actionable
+
 ### Security Dashboard
 - **Functionality**: Display security metrics, recent activity, and security recommendations
 - **Purpose**: Provide visibility into token usage patterns and potential security issues
@@ -56,17 +91,23 @@ This app manages tokens across multiple views with create/revoke operations, tok
 
 ## Edge Case Handling
 - **Empty States**: First-time users see welcoming onboarding with clear "Create First Token" CTA and explanation of Token Vault benefits
+- **Empty Marketplace**: When no listings available, show empty state encouraging users to list their tokens
 - **Expired Tokens**: Visually distinct (muted colors, warning badge) with prompts to refresh or create new
 - **Expiring Soon Tokens**: Highlighted with warning color (yellow) and refresh button prominently displayed (tokens within 7 days of expiration)
 - **Revoked Tokens**: Remain in history view but clearly marked as inactive with timestamp of revocation, refresh button disabled
+- **Listed Tokens**: Cannot be revoked or refreshed while listed in marketplace, must delist first
+- **Sold Tokens**: Automatically removed from seller's vault, transfer logged in security events
 - **Refreshed Tokens**: Generate new value and extend expiration, old token value immediately invalidated, security event logged with details
+- **Insufficient Funds**: Prevent purchase if user's balance is too low, show clear error message
+- **Concurrent Purchase**: Handle case where listing is purchased by multiple users simultaneously (first wins)
 - **Network Simulation**: Simulated API delays show loading states and handle "failures" gracefully with retry options
 - **Duplicate Names**: Prevent or warn when creating tokens with identical names
 - **Long Token Values**: Truncate with ellipsis and provide copy button, never break layout
 - **No Tokens**: Show compelling empty state with illustration and clear next steps
+- **Price Validation**: Prevent negative prices, extremely high prices (cap at 10,000), or zero-price listings
 
 ## Design Direction
-The design should evoke trust, sophistication, and technological precision - like a high-security control center meets modern fintech. Think dark terminals with glowing accents, crisp typography, and subtle neon highlights that communicate both security and cutting-edge technology.
+The design should evoke trust, sophistication, and technological precision - like a high-security control center meets modern fintech trading platform. Think dark terminals with glowing accents, crisp typography, and subtle neon highlights that communicate both security and cutting-edge technology. The marketplace section should feel vibrant and active with price tags, ratings, and trending indicators that suggest a thriving economy.
 
 ## Color Selection
 A dark, cybersecurity-inspired palette with electric blue accents and high contrast for clarity.
@@ -74,6 +115,8 @@ A dark, cybersecurity-inspired palette with electric blue accents and high contr
 - **Primary Color**: Electric Blue (oklch(0.65 0.25 250)) - Represents security, technology, and trust; used for primary actions and focus states
 - **Secondary Colors**: Deep Navy (oklch(0.15 0.02 250)) for backgrounds, Slate Gray (oklch(0.35 0.02 250)) for cards and elevated surfaces
 - **Accent Color**: Neon Cyan (oklch(0.75 0.15 195)) - High-energy highlight for important status indicators, active tokens, and success states
+- **Success/Currency**: Vibrant Green (oklch(0.70 0.20 150)) - Represents earnings, successful purchases, and positive metrics
+- **Warning**: Warm Orange (oklch(0.70 0.18 50)) - Expiring soon tokens and caution indicators
 - **Destructive**: Vibrant Red (oklch(0.60 0.24 25)) - Clear danger signaling for revoke and delete actions
 - **Foreground/Background Pairings**:
   - Background (Deep Navy oklch(0.15 0.02 250)): Light text (oklch(0.95 0.01 250)) - Ratio 10.2:1 ✓

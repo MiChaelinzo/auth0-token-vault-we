@@ -1,31 +1,56 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
-import { Token, TokenType, TokenScope, SecurityEvent } from '@/lib/types'
+import { Token, TokenType, TokenScope, SecurityEvent, MarketplaceListing, Transaction, UserBalance } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { TokenCard } from '@/components/TokenCard'
 import { CreateTokenDialog } from '@/components/CreateTokenDialog'
 import { TokenDetailsDialog } from '@/components/TokenDetailsDialog'
 import { SecurityDashboard } from '@/components/SecurityDashboard'
 import { EmptyState } from '@/components/EmptyState'
-import { LockKey, Plus, ShieldCheck, MagnifyingGlass } from '@phosphor-icons/react'
+import { MarketplaceBrowse } from '@/components/MarketplaceBrowse'
+import { PurchaseDialog } from '@/components/PurchaseDialog'
+import { TransactionsView } from '@/components/TransactionsView'
+import { LockKey, Plus, ShieldCheck, MagnifyingGlass, Storefront, Receipt, CurrencyDollar, Wallet } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { isTokenExpired, refreshTokenValue, getExpirationDate } from '@/lib/token-utils'
+import { generateSampleListings, formatPrice } from '@/lib/marketplace-utils'
 import { v4 as uuidv4 } from 'uuid'
 
 function App() {
   const [tokens, setTokens] = useKV<Token[]>('tokens', [])
   const [events, setEvents] = useKV<SecurityEvent[]>('security-events', [])
+  const [marketplaceListings, setMarketplaceListings] = useKV<MarketplaceListing[]>('marketplace-listings', [])
+  const [transactions, setTransactions] = useKV<Transaction[]>('transactions', [])
+  const [userBalance, setUserBalance] = useKV<UserBalance>('user-balance', {
+    userId: 'current-user',
+    balance: 5000,
+    totalEarnings: 0,
+    totalSpent: 0,
+  })
+  
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
+  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false)
   const [selectedToken, setSelectedToken] = useState<Token | null>(null)
+  const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState('tokens')
+  const [activeTab, setActiveTab] = useState('vault')
 
   const tokensList = tokens || []
   const eventsList = events || []
+  const listingsList = marketplaceListings || []
+  const transactionsList = transactions || []
+  const balance = userBalance || { userId: 'current-user', balance: 5000, totalEarnings: 0, totalSpent: 0 }
+
+  useEffect(() => {
+    if (listingsList.length === 0) {
+      setMarketplaceListings(generateSampleListings())
+    }
+  }, [])
 
   const handleCreateToken = (tokenData: {
     name: string
@@ -45,6 +70,7 @@ function App() {
       lastUsed: null,
       expiresAt: tokenData.expiresAt,
       usageCount: 0,
+      ownerId: 'current-user',
     }
 
     setTokens((currentTokens) => [...(currentTokens || []), newToken])
@@ -119,6 +145,72 @@ function App() {
     setDetailsDialogOpen(true)
   }
 
+  const handlePurchaseListing = (listing: MarketplaceListing) => {
+    setSelectedListing(listing)
+    setPurchaseDialogOpen(true)
+  }
+
+  const handleConfirmPurchase = () => {
+    if (!selectedListing || balance.balance < selectedListing.price) return
+
+    const purchasedToken: Token = {
+      ...selectedListing.token,
+      id: uuidv4(),
+      ownerId: 'current-user',
+      status: 'active',
+    }
+
+    setTokens((currentTokens) => [...(currentTokens || []), purchasedToken])
+
+    setUserBalance((currentBalance) => ({
+      ...currentBalance!,
+      balance: currentBalance!.balance - selectedListing.price,
+      totalSpent: currentBalance!.totalSpent + selectedListing.price,
+    }))
+
+    const newTransaction: Transaction = {
+      id: uuidv4(),
+      listingId: selectedListing.id,
+      tokenId: purchasedToken.id,
+      tokenName: selectedListing.token.name,
+      buyerId: 'current-user',
+      buyerName: 'You',
+      sellerId: selectedListing.sellerId,
+      sellerName: selectedListing.sellerName,
+      price: selectedListing.price,
+      timestamp: new Date().toISOString(),
+      status: 'completed',
+    }
+
+    setTransactions((currentTransactions) => [newTransaction, ...(currentTransactions || [])])
+
+    setMarketplaceListings((currentListings) =>
+      (currentListings || []).filter((l) => l.id !== selectedListing.id)
+    )
+
+    const newEvent: SecurityEvent = {
+      id: uuidv4(),
+      type: 'purchased',
+      tokenId: purchasedToken.id,
+      tokenName: purchasedToken.name,
+      timestamp: new Date().toISOString(),
+      details: `Purchased from ${selectedListing.sellerName} for ${formatPrice(selectedListing.price)}`,
+    }
+    setEvents((currentEvents) => [newEvent, ...(currentEvents || [])])
+
+    toast.success(`Token "${selectedListing.token.name}" purchased successfully`, {
+      description: `Added to your vault. Remaining balance: ${formatPrice(balance.balance - selectedListing.price)}`,
+    })
+
+    setSelectedListing(null)
+  }
+
+  const handleViewListingDetails = (listing: MarketplaceListing) => {
+    toast.info('Listing details', {
+      description: `${listing.token.name} - ${listing.description.substring(0, 80)}...`,
+    })
+  }
+
   const getProcessedTokens = () => {
     return tokensList.map((token) => {
       if (token.status === 'active' && isTokenExpired(token.expiresAt)) {
@@ -150,33 +242,53 @@ function App() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">Token Vault</h1>
-                <p className="text-sm text-muted-foreground">Secure API Token Management</p>
+                <p className="text-sm text-muted-foreground">Secure Token Management & Marketplace</p>
               </div>
             </div>
 
-            {tokensList.length > 0 && (
-              <Button 
-                size="lg" 
-                onClick={() => setCreateDialogOpen(true)}
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Plus weight="bold" className="mr-2" />
-                Create Token
-              </Button>
-            )}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 bg-card/50 backdrop-blur-sm border border-border/50 px-4 py-2 rounded-lg">
+                <Wallet weight="duotone" className="w-5 h-5 text-chart-5" />
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Balance</p>
+                  <p className="font-mono font-semibold text-lg text-chart-5">
+                    {formatPrice(balance.balance)}
+                  </p>
+                </div>
+              </div>
+
+              {tokensList.length > 0 && (
+                <Button 
+                  size="lg" 
+                  onClick={() => setCreateDialogOpen(true)}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <Plus weight="bold" className="mr-2" />
+                  Create Token
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {tokensList.length === 0 ? (
+        {tokensList.length === 0 && activeTab === 'vault' ? (
           <EmptyState onCreateToken={() => setCreateDialogOpen(true)} />
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-card/50 backdrop-blur-sm border border-border/50">
-              <TabsTrigger value="tokens" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsTrigger value="vault" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <LockKey weight="duotone" className="mr-2" />
-                Tokens ({activeTokens.length})
+                My Vault ({activeTokens.length})
+              </TabsTrigger>
+              <TabsTrigger value="marketplace" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Storefront weight="duotone" className="mr-2" />
+                Marketplace ({listingsList.length})
+              </TabsTrigger>
+              <TabsTrigger value="transactions" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Receipt weight="duotone" className="mr-2" />
+                Transactions ({transactionsList.length})
               </TabsTrigger>
               <TabsTrigger value="security" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <ShieldCheck weight="duotone" className="mr-2" />
@@ -184,7 +296,7 @@ function App() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="tokens" className="space-y-6">
+            <TabsContent value="vault" className="space-y-6">
               <div className="flex items-center gap-4">
                 <div className="relative flex-1 max-w-md">
                   <MagnifyingGlass 
@@ -221,6 +333,21 @@ function App() {
               )}
             </TabsContent>
 
+            <TabsContent value="marketplace">
+              <MarketplaceBrowse
+                listings={listingsList}
+                onPurchase={handlePurchaseListing}
+                onViewDetails={handleViewListingDetails}
+              />
+            </TabsContent>
+
+            <TabsContent value="transactions">
+              <TransactionsView
+                transactions={transactionsList}
+                currentUserId="current-user"
+              />
+            </TabsContent>
+
             <TabsContent value="security">
               <SecurityDashboard tokens={getProcessedTokens()} events={eventsList} />
             </TabsContent>
@@ -240,6 +367,14 @@ function App() {
         onOpenChange={setDetailsDialogOpen}
         onRevoke={handleRevokeToken}
         onRefresh={handleRefreshToken}
+      />
+
+      <PurchaseDialog
+        listing={selectedListing}
+        open={purchaseDialogOpen}
+        onOpenChange={setPurchaseDialogOpen}
+        onConfirm={handleConfirmPurchase}
+        userBalance={balance.balance}
       />
     </div>
   )
