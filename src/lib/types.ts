@@ -31,7 +31,7 @@ export interface TokenUsage {
 
 export interface SecurityEvent {
   id: string
-  type: 'created' | 'revoked' | 'used' | 'failed' | 'expired'
+  type: 'created' | 'revoked' | 'used' | 'failed' | 'expired' | 'refreshed'
   tokenId: string
   tokenName: string
   timestamp: string

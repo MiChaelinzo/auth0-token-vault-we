@@ -31,7 +31,14 @@ This app manages tokens across multiple views with create/revoke operations, tok
 - **Purpose**: Enable detailed inspection and lifecycle management of individual tokens
 - **Trigger**: Click on any token card
 - **Progression**: Click token → Dialog/sheet opens → View metadata, usage stats, scopes → Action buttons available → Confirm destructive actions → List updates
-- **Success Criteria**: All metadata displays accurately, revoke requires confirmation, UI updates immediately
+- **Success criteria**: All metadata displays accurately, revoke requires confirmation, refresh extends expiration, UI updates immediately
+
+### Token Refresh
+- **Functionality**: Regenerate token value and extend expiration date for expiring or expired tokens
+- **Purpose**: Allow users to renew tokens without recreating them, maintaining token history and ID
+- **Trigger**: Click "Refresh" button on token card or in token details dialog (only visible for tokens expiring within 7 days or already expired)
+- **Progression**: Click refresh → Confirmation dialog explains impact → Confirm → New token value generated → Expiration extended by 30 days → Security event logged → Success notification with new token value
+- **Success criteria**: Refresh button only shows for eligible tokens, old token immediately invalidated, new value generated, expiration updated, security event created
 
 ### Security Dashboard
 - **Functionality**: Display security metrics, recent activity, and security recommendations
@@ -50,7 +57,9 @@ This app manages tokens across multiple views with create/revoke operations, tok
 ## Edge Case Handling
 - **Empty States**: First-time users see welcoming onboarding with clear "Create First Token" CTA and explanation of Token Vault benefits
 - **Expired Tokens**: Visually distinct (muted colors, warning badge) with prompts to refresh or create new
-- **Revoked Tokens**: Remain in history view but clearly marked as inactive with timestamp of revocation
+- **Expiring Soon Tokens**: Highlighted with warning color (yellow) and refresh button prominently displayed (tokens within 7 days of expiration)
+- **Revoked Tokens**: Remain in history view but clearly marked as inactive with timestamp of revocation, refresh button disabled
+- **Refreshed Tokens**: Generate new value and extend expiration, old token value immediately invalidated, security event logged with details
 - **Network Simulation**: Simulated API delays show loading states and handle "failures" gracefully with retry options
 - **Duplicate Names**: Prevent or warn when creating tokens with identical names
 - **Long Token Values**: Truncate with ellipsis and provide copy button, never break layout

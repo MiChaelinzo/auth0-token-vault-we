@@ -12,7 +12,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { LockKey, Plus, ShieldCheck, MagnifyingGlass } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
-import { isTokenExpired } from '@/lib/token-utils'
+import { isTokenExpired, refreshTokenValue, getExpirationDate } from '@/lib/token-utils'
 import { v4 as uuidv4 } from 'uuid'
 
 function App() {
@@ -80,6 +80,38 @@ function App() {
     setEvents((currentEvents) => [newEvent, ...(currentEvents || [])])
 
     toast.success(`Token "${token.name}" has been revoked`)
+  }
+
+  const handleRefreshToken = (token: Token) => {
+    const newValue = refreshTokenValue(token.value)
+    const newExpiresAt = getExpirationDate(30)
+    
+    setTokens((currentTokens) =>
+      (currentTokens || []).map((t) =>
+        t.id === token.id
+          ? {
+              ...t,
+              value: newValue,
+              expiresAt: newExpiresAt,
+              status: 'active' as const,
+            }
+          : t
+      )
+    )
+
+    const newEvent: SecurityEvent = {
+      id: uuidv4(),
+      type: 'refreshed',
+      tokenId: token.id,
+      tokenName: token.name,
+      timestamp: new Date().toISOString(),
+      details: `Token refreshed with new value and extended expiration (30 days)`,
+    }
+    setEvents((currentEvents) => [newEvent, ...(currentEvents || [])])
+
+    toast.success(`Token "${token.name}" has been refreshed`, {
+      description: 'New token value generated and expiration extended by 30 days',
+    })
   }
 
   const handleViewToken = (token: Token) => {
@@ -181,6 +213,7 @@ function App() {
                       token={token}
                       onView={handleViewToken}
                       onRevoke={handleRevokeToken}
+                      onRefresh={handleRefreshToken}
                       index={index}
                     />
                   ))}
@@ -206,6 +239,7 @@ function App() {
         open={detailsDialogOpen}
         onOpenChange={setDetailsDialogOpen}
         onRevoke={handleRevokeToken}
+        onRefresh={handleRefreshToken}
       />
     </div>
   )

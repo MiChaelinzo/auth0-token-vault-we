@@ -90,3 +90,13 @@ export function getExpirationDate(days: number | null): string | null {
   date.setDate(date.getDate() + days)
   return date.toISOString()
 }
+
+export function canRefreshToken(token: { status: string; expiresAt: string | null }): boolean {
+  if (token.status === 'revoked') return false
+  if (!token.expiresAt) return false
+  return isTokenExpired(token.expiresAt) || isTokenExpiringSoon(token.expiresAt)
+}
+
+export function refreshTokenValue(originalValue: string): string {
+  return generateTokenValue()
+}

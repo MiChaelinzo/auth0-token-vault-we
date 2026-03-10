@@ -2,8 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Token } from '@/lib/types'
-import { getTokenStatusColor, formatRelativeTime, isTokenExpired, isTokenExpiringSoon, getTokenTypeIcon } from '@/lib/token-utils'
-import { Clock, Copy, Key, Trash, Eye } from '@phosphor-icons/react'
+import { getTokenStatusColor, formatRelativeTime, isTokenExpired, isTokenExpiringSoon, getTokenTypeIcon, canRefreshToken } from '@/lib/token-utils'
+import { Clock, Copy, Key, Trash, Eye, ArrowClockwise } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { Progress } from '@/components/ui/progress'
 
@@ -11,12 +11,14 @@ interface TokenCardProps {
   token: Token
   onView: (token: Token) => void
   onRevoke: (token: Token) => void
+  onRefresh?: (token: Token) => void
   index: number
 }
 
-export function TokenCard({ token, onView, onRevoke, index }: TokenCardProps) {
+export function TokenCard({ token, onView, onRevoke, onRefresh, index }: TokenCardProps) {
   const isExpired = isTokenExpired(token.expiresAt)
   const isExpiringSoon = isTokenExpiringSoon(token.expiresAt)
+  const canRefresh = canRefreshToken(token)
   
   const getExpirationProgress = () => {
     if (!token.expiresAt) return 100
@@ -100,10 +102,24 @@ export function TokenCard({ token, onView, onRevoke, index }: TokenCardProps) {
           </div>
 
           <div className="flex items-center gap-2 pt-2">
+            {canRefresh && onRefresh && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-accent/50 text-accent hover:bg-accent/10"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRefresh(token)
+                }}
+              >
+                <ArrowClockwise weight="duotone" className="mr-1.5" />
+                Refresh
+              </Button>
+            )}
             <Button
               size="sm"
               variant="outline"
-              className="flex-1"
+              className={canRefresh ? '' : 'flex-1'}
               onClick={(e) => {
                 e.stopPropagation()
                 onView(token)

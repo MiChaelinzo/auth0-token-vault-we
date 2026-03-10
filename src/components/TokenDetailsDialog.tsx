@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Token } from '@/lib/types'
-import { getTokenStatusColor, formatDate, formatRelativeTime, copyToClipboard, AVAILABLE_SCOPES } from '@/lib/token-utils'
-import { Copy, Eye, EyeSlash, Trash, CheckCircle } from '@phosphor-icons/react'
+import { getTokenStatusColor, formatDate, formatRelativeTime, copyToClipboard, AVAILABLE_SCOPES, canRefreshToken } from '@/lib/token-utils'
+import { Copy, Eye, EyeSlash, Trash, CheckCircle, ArrowClockwise } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 
@@ -14,14 +14,18 @@ interface TokenDetailsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onRevoke: (token: Token) => void
+  onRefresh?: (token: Token) => void
 }
 
-export function TokenDetailsDialog({ token, open, onOpenChange, onRevoke }: TokenDetailsDialogProps) {
+export function TokenDetailsDialog({ token, open, onOpenChange, onRevoke, onRefresh }: TokenDetailsDialogProps) {
   const [showToken, setShowToken] = useState(false)
   const [copied, setCopied] = useState(false)
   const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false)
+  const [refreshConfirmOpen, setRefreshConfirmOpen] = useState(false)
 
   if (!token) return null
+
+  const canRefresh = canRefreshToken(token)
 
   const handleCopy = async () => {
     await copyToClipboard(token.value)
@@ -34,6 +38,14 @@ export function TokenDetailsDialog({ token, open, onOpenChange, onRevoke }: Toke
     onRevoke(token)
     setRevokeConfirmOpen(false)
     onOpenChange(false)
+  }
+
+  const handleRefresh = () => {
+    if (onRefresh) {
+      onRefresh(token)
+      setRefreshConfirmOpen(false)
+      onOpenChange(false)
+    }
   }
 
   const getScopeInfo = (scopeValue: string) => {
@@ -149,20 +161,53 @@ export function TokenDetailsDialog({ token, open, onOpenChange, onRevoke }: Toke
           </div>
 
           <div className="flex justify-between items-center pt-4 border-t border-border/50">
-            <Button
-              variant="destructive"
-              onClick={() => setRevokeConfirmOpen(true)}
-              disabled={token.status === 'revoked'}
-            >
-              <Trash weight="duotone" className="mr-2" />
-              Revoke Token
-            </Button>
+            <div className="flex gap-2">
+              {canRefresh && onRefresh && (
+                <Button
+                  variant="outline"
+                  onClick={() => setRefreshConfirmOpen(true)}
+                  className="border-accent/50 text-accent hover:bg-accent/10"
+                >
+                  <ArrowClockwise weight="duotone" className="mr-2" />
+                  Refresh Token
+                </Button>
+              )}
+              <Button
+                variant="destructive"
+                onClick={() => setRevokeConfirmOpen(true)}
+                disabled={token.status === 'revoked'}
+              >
+                <Trash weight="duotone" className="mr-2" />
+                Revoke Token
+              </Button>
+            </div>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={refreshConfirmOpen} onOpenChange={setRefreshConfirmOpen}>
+        <AlertDialogContent className="bg-card/95 backdrop-blur-xl border-border/50">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Refresh Token?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will generate a new token value for "{token.name}" and extend its expiration by 30 days. 
+              The old token value will be immediately invalidated. Make sure to update any applications using this token.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRefresh}
+              className="bg-accent hover:bg-accent/90 text-accent-foreground"
+            >
+              Refresh
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={revokeConfirmOpen} onOpenChange={setRevokeConfirmOpen}>
         <AlertDialogContent className="bg-card/95 backdrop-blur-xl border-border/50">
