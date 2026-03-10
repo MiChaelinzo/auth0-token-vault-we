@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Token, TokenType, TokenScope, SecurityEvent, MarketplaceListing, Transaction, UserBalance } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { TokenCard } from '@/components/TokenCard'
 import { CreateTokenDialog } from '@/components/CreateTokenDialog'
 import { TokenDetailsDialog } from '@/components/TokenDetailsDialog'
@@ -13,11 +14,14 @@ import { EmptyState } from '@/components/EmptyState'
 import { MarketplaceBrowse } from '@/components/MarketplaceBrowse'
 import { PurchaseDialog } from '@/components/PurchaseDialog'
 import { TransactionsView } from '@/components/TransactionsView'
-import { LockKey, Plus, ShieldCheck, MagnifyingGlass, Storefront, Receipt, CurrencyDollar, Wallet } from '@phosphor-icons/react'
+import { TokenAnalytics } from '@/components/TokenAnalytics'
+import { ListForSaleDialog } from '@/components/ListForSaleDialog'
+import { LockKey, Plus, ShieldCheck, MagnifyingGlass, Storefront, Receipt, CurrencyDollar, Wallet, DotsThree, DownloadSimple, UploadSimple, ChartBar } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { isTokenExpired, refreshTokenValue, getExpirationDate } from '@/lib/token-utils'
 import { generateSampleListings, formatPrice } from '@/lib/marketplace-utils'
+import { downloadVaultBackup, importVaultData } from '@/lib/export-utils'
 import { v4 as uuidv4 } from 'uuid'
 
 function App() {
@@ -35,10 +39,12 @@ function App() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false)
+  const [listForSaleDialogOpen, setListForSaleDialogOpen] = useState(false)
   const [selectedToken, setSelectedToken] = useState<Token | null>(null)
   const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('vault')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const tokensList = tokens || []
   const eventsList = events || []
@@ -211,6 +217,92 @@ function App() {
     })
   }
 
+  const handleExportData = () => {
+    downloadVaultBackup(tokensList, eventsList, transactionsList, balance)
+    toast.success('Vault data exported successfully', {
+      description: 'Your backup file has been downloaded',
+    })
+  }
+
+  const handleImportData = async () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const backup = await importVaultData(file)
+      
+      setTokens(backup.tokens)
+      setEvents(backup.events)
+      setTransactions(backup.transactions)
+      setUserBalance(backup.balance)
+
+      toast.success('Vault data imported successfully', {
+        description: `Restored ${backup.tokens.length} tokens and ${backup.transactions.length} transactions`,
+      })
+    } catch (error) {
+      toast.error('Failed to import vault data', {
+        description: error instanceof Error ? error.message : 'Invalid backup file',
+      })
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleListTokenForSale = (token: Token) => {
+    setSelectedToken(token)
+    setListForSaleDialogOpen(true)
+  }
+
+  const handleConfirmListing = (tokenId: string, price: number, description: string, category: string) => {
+    const token = tokensList.find((t) => t.id === tokenId)
+    if (!token) return
+
+    const newListing: MarketplaceListing = {
+      id: uuidv4(),
+      tokenId: token.id,
+      token: { ...token, status: 'listed' },
+      sellerId: 'current-user',
+      sellerName: 'You',
+      price,
+      description,
+      category,
+      rating: 0,
+      reviewCount: 0,
+      listedAt: new Date().toISOString(),
+      featured: false,
+      views: 0,
+      status: 'active',
+    }
+
+    setMarketplaceListings((currentListings) => [newListing, ...(currentListings || [])])
+
+    setTokens((currentTokens) =>
+      (currentTokens || []).map((t) =>
+        t.id === tokenId ? { ...t, status: 'listed' as const, listedPrice: price } : t
+      )
+    )
+
+    const newEvent: SecurityEvent = {
+      id: uuidv4(),
+      type: 'listed',
+      tokenId: token.id,
+      tokenName: token.name,
+      timestamp: new Date().toISOString(),
+      details: `Listed for sale at ${formatPrice(price)} in ${category}`,
+    }
+    setEvents((currentEvents) => [newEvent, ...(currentEvents || [])])
+
+    toast.success(`Token "${token.name}" listed for sale`, {
+      description: `Now available in marketplace for ${formatPrice(price)}`,
+    })
+  }
+
   const getProcessedTokens = () => {
     return tokensList.map((token) => {
       if (token.status === 'active' && isTokenExpired(token.expiresAt)) {
@@ -258,19 +350,52 @@ function App() {
               </div>
 
               {tokensList.length > 0 && (
-                <Button 
-                  size="lg" 
-                  onClick={() => setCreateDialogOpen(true)}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  <Plus weight="bold" className="mr-2" />
-                  Create Token
-                </Button>
+                <>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="lg">
+                        <DotsThree weight="bold" className="w-5 h-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={handleExportData}>
+                        <DownloadSimple weight="duotone" className="mr-2" />
+                        Export Vault Data
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleImportData}>
+                        <UploadSimple weight="duotone" className="mr-2" />
+                        Import Vault Data
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setActiveTab('analytics')}>
+                        <ChartBar weight="duotone" className="mr-2" />
+                        View Analytics
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Button 
+                    size="lg" 
+                    onClick={() => setCreateDialogOpen(true)}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Plus weight="bold" className="mr-2" />
+                    Create Token
+                  </Button>
+                </>
               )}
             </div>
           </div>
         </div>
       </header>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
 
       <main className="container mx-auto px-4 py-8">
         {tokensList.length === 0 && activeTab === 'vault' ? (
@@ -289,6 +414,10 @@ function App() {
               <TabsTrigger value="transactions" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Receipt weight="duotone" className="mr-2" />
                 Transactions ({transactionsList.length})
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <ChartBar weight="duotone" className="mr-2" />
+                Analytics
               </TabsTrigger>
               <TabsTrigger value="security" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <ShieldCheck weight="duotone" className="mr-2" />
@@ -348,6 +477,10 @@ function App() {
               />
             </TabsContent>
 
+            <TabsContent value="analytics">
+              <TokenAnalytics tokens={getProcessedTokens()} />
+            </TabsContent>
+
             <TabsContent value="security">
               <SecurityDashboard tokens={getProcessedTokens()} events={eventsList} />
             </TabsContent>
@@ -375,6 +508,13 @@ function App() {
         onOpenChange={setPurchaseDialogOpen}
         onConfirm={handleConfirmPurchase}
         userBalance={balance.balance}
+      />
+
+      <ListForSaleDialog
+        token={selectedToken}
+        open={listForSaleDialogOpen}
+        onOpenChange={setListForSaleDialogOpen}
+        onList={handleConfirmListing}
       />
     </div>
   )

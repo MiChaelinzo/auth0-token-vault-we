@@ -85,9 +85,23 @@ This app manages personal tokens, facilitates marketplace transactions, handles 
 ### Token Usage Analytics
 - **Functionality**: Visual charts showing token usage over time, by endpoint, and by token type
 - **Purpose**: Help users understand their API consumption patterns and identify anomalies
-- **Trigger**: View in security dashboard or individual token details
-- **Progression**: Load view → Charts animate in → Hover for details → Filter by time range → Export data option
+- **Trigger**: Click Analytics tab
+- **Progression**: Load view → Charts animate in → View metrics (total tokens, active tokens, API calls, health score) → Explore usage charts → Filter by time range
 - **Success Criteria**: D3/Recharts display smooth animations, data is accurate, interactions feel responsive
+
+### List Token for Sale
+- **Functionality**: Create marketplace listings from owned tokens
+- **Purpose**: Allow users to monetize their API access or specialized tokens
+- **Trigger**: Click "List for Sale" in token details or quick actions menu
+- **Progression**: Select token → Enter price → Choose category → Write description → Preview listing → Confirm → Listed in marketplace
+- **Success Criteria**: Only active tokens can be listed, price validation works (0.01 to 10,000), preview accurate, listing immediately searchable
+
+### Export/Import Vault Data
+- **Functionality**: Download complete vault backup (JSON) and restore from backup files
+- **Purpose**: Enable users to backup their data and migrate between devices/accounts
+- **Trigger**: Click export/import in quick actions dropdown menu
+- **Progression**: Export: Click export → JSON file downloads with timestamp | Import: Click import → Choose file → Validate format → Restore data → Success confirmation
+- **Success Criteria**: Export includes all tokens, events, transactions, and balance; Import validates format and handles errors gracefully
 
 ## Edge Case Handling
 - **Empty States**: First-time users see welcoming onboarding with clear "Create First Token" CTA and explanation of Token Vault benefits
