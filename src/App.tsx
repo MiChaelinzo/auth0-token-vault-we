@@ -19,12 +19,14 @@ import { ListForSaleDialog } from '@/components/ListForSaleDialog'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { BulkConfirmationDialog } from '@/components/BulkConfirmationDialog'
 import { BulkFilterBar } from '@/components/BulkFilterBar'
-import { LockKey, Plus, ShieldCheck, MagnifyingGlass, Storefront, Receipt, CurrencyDollar, Wallet, DotsThree, DownloadSimple, UploadSimple, ChartBar, CheckSquare } from '@phosphor-icons/react'
+import { TokenTemplatesDialog } from '@/components/TokenTemplatesDialog'
+import { LockKey, Plus, ShieldCheck, MagnifyingGlass, Storefront, Receipt, CurrencyDollar, Wallet, DotsThree, DownloadSimple, UploadSimple, ChartBar, CheckSquare, Sparkle, Star } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { isTokenExpired, refreshTokenValue, getExpirationDate } from '@/lib/token-utils'
 import { generateSampleListings, formatPrice } from '@/lib/marketplace-utils'
 import { downloadVaultBackup, importVaultData, downloadSelectedTokensBackup } from '@/lib/export-utils'
+import { TokenTemplate } from '@/lib/token-templates'
 import { v4 as uuidv4 } from 'uuid'
 
 function App() {
@@ -43,10 +45,12 @@ function App() {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false)
   const [listForSaleDialogOpen, setListForSaleDialogOpen] = useState(false)
+  const [templatesDialogOpen, setTemplatesDialogOpen] = useState(false)
   const [selectedToken, setSelectedToken] = useState<Token | null>(null)
   const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('vault')
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [selectedTokenIds, setSelectedTokenIds] = useState<Set<string>>(new Set())
@@ -443,6 +447,51 @@ function App() {
     setSelectionMode(true)
   }
 
+  const handleToggleFavorite = (token: Token) => {
+    setTokens((currentTokens) =>
+      (currentTokens || []).map((t) =>
+        t.id === token.id ? { ...t, favorite: !t.favorite } : t
+      )
+    )
+    toast.success(
+      token.favorite ? `Removed "${token.name}" from favorites` : `Added "${token.name}" to favorites`
+    )
+  }
+
+  const handleSelectTemplate = (template: TokenTemplate) => {
+    const expiryDays = template.expirationDays
+    const newToken: Token = {
+      id: uuidv4(),
+      name: template.name,
+      type: template.type,
+      value: `${template.service.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      status: 'active',
+      scopes: template.defaultScopes,
+      createdAt: new Date().toISOString(),
+      lastUsed: null,
+      expiresAt: expiryDays ? getExpirationDate(expiryDays) : null,
+      usageCount: 0,
+      ownerId: 'current-user',
+      tags: [template.category, template.service],
+    }
+
+    setTokens((currentTokens) => [...(currentTokens || []), newToken])
+
+    const newEvent: SecurityEvent = {
+      id: uuidv4(),
+      type: 'created',
+      tokenId: newToken.id,
+      tokenName: newToken.name,
+      timestamp: new Date().toISOString(),
+      details: `Created ${template.service} token from template`,
+    }
+    setEvents((currentEvents) => [newEvent, ...(currentEvents || [])])
+
+    toast.success(`Token "${template.name}" created from template`, {
+      description: `${template.service} token ready to use`,
+    })
+  }
+
   const getProcessedTokens = () => {
     return tokensList.map((token) => {
       if (token.status === 'active' && isTokenExpired(token.expiresAt)) {
@@ -452,13 +501,26 @@ function App() {
     })
   }
 
-  const filteredTokens = getProcessedTokens().filter((token) =>
-    token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    token.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    token.status.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredTokens = getProcessedTokens()
+    .filter((token) => {
+      const matchesSearch =
+        token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        token.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        token.status.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      const matchesFavorites = showFavoritesOnly ? token.favorite === true : true
+      
+      return matchesSearch && matchesFavorites
+    })
 
   const activeTokens = filteredTokens.filter(t => t.status === 'active')
+  const favoriteTokens = tokensList.filter(t => t.favorite === true)
+  
+  const sortedFilteredTokens = [...filteredTokens].sort((a, b) => {
+    if (a.favorite && !b.favorite) return -1
+    if (!a.favorite && b.favorite) return 1
+    return 0
+  })
 
   return (
     <div className="min-h-screen">
@@ -517,6 +579,16 @@ function App() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    onClick={() => setTemplatesDialogOpen(true)}
+                    className="border-accent/50 text-accent hover:bg-accent/10"
+                  >
+                    <Sparkle weight="duotone" className="mr-2" />
+                    Templates
+                  </Button>
 
                   <Button 
                     size="lg" 
@@ -584,6 +656,17 @@ function App() {
                     className="pl-10 bg-card/50 border-border/50"
                   />
                 </div>
+                {favoriteTokens.length > 0 && (
+                  <Button
+                    variant={showFavoritesOnly ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                    className={showFavoritesOnly ? "" : "border-warning/50 text-warning hover:bg-warning/10"}
+                  >
+                    <Star weight={showFavoritesOnly ? "fill" : "duotone"} className="mr-2" />
+                    Favorites ({favoriteTokens.length})
+                  </Button>
+                )}
                 <BulkFilterBar
                   tokens={getProcessedTokens()}
                   onFilterSelect={handleFilterSelect}
@@ -591,19 +674,20 @@ function App() {
                 />
               </div>
 
-              {filteredTokens.length === 0 ? (
+              {sortedFilteredTokens.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <p>No tokens found matching your search</p>
                 </div>
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  {filteredTokens.map((token, index) => (
+                  {sortedFilteredTokens.map((token, index) => (
                     <TokenCard
                       key={token.id}
                       token={token}
                       onView={handleViewToken}
                       onRevoke={handleRevokeToken}
                       onRefresh={handleRefreshToken}
+                      onToggleFavorite={handleToggleFavorite}
                       index={index}
                       isSelected={selectedTokenIds.has(token.id)}
                       onToggleSelection={handleToggleSelection}
@@ -667,6 +751,12 @@ function App() {
         open={listForSaleDialogOpen}
         onOpenChange={setListForSaleDialogOpen}
         onList={handleConfirmListing}
+      />
+
+      <TokenTemplatesDialog
+        open={templatesDialogOpen}
+        onOpenChange={setTemplatesDialogOpen}
+        onSelectTemplate={handleSelectTemplate}
       />
 
       <BulkActionsBar

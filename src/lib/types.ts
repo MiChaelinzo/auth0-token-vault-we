@@ -23,6 +23,9 @@ export interface Token {
   usageCount: number
   ownerId?: string
   listedPrice?: number
+  favorite?: boolean
+  healthScore?: number
+  tags?: string[]
 }
 
 export interface TokenUsage {
