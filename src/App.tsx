@@ -16,12 +16,14 @@ import { PurchaseDialog } from '@/components/PurchaseDialog'
 import { TransactionsView } from '@/components/TransactionsView'
 import { TokenAnalytics } from '@/components/TokenAnalytics'
 import { ListForSaleDialog } from '@/components/ListForSaleDialog'
-import { LockKey, Plus, ShieldCheck, MagnifyingGlass, Storefront, Receipt, CurrencyDollar, Wallet, DotsThree, DownloadSimple, UploadSimple, ChartBar } from '@phosphor-icons/react'
+import { BulkActionsBar } from '@/components/BulkActionsBar'
+import { BulkConfirmationDialog } from '@/components/BulkConfirmationDialog'
+import { LockKey, Plus, ShieldCheck, MagnifyingGlass, Storefront, Receipt, CurrencyDollar, Wallet, DotsThree, DownloadSimple, UploadSimple, ChartBar, CheckSquare } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { isTokenExpired, refreshTokenValue, getExpirationDate } from '@/lib/token-utils'
 import { generateSampleListings, formatPrice } from '@/lib/marketplace-utils'
-import { downloadVaultBackup, importVaultData } from '@/lib/export-utils'
+import { downloadVaultBackup, importVaultData, downloadSelectedTokensBackup } from '@/lib/export-utils'
 import { v4 as uuidv4 } from 'uuid'
 
 function App() {
@@ -45,6 +47,11 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('vault')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [selectedTokenIds, setSelectedTokenIds] = useState<Set<string>>(new Set())
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [bulkAction, setBulkAction] = useState<'revoke' | 'refresh' | 'delete' | null>(null)
+  const [bulkConfirmDialogOpen, setBulkConfirmDialogOpen] = useState(false)
 
   const tokensList = tokens || []
   const eventsList = events || []
@@ -303,6 +310,133 @@ function App() {
     })
   }
 
+  const handleToggleSelection = (token: Token) => {
+    setSelectedTokenIds((currentIds) => {
+      const newIds = new Set(currentIds)
+      if (newIds.has(token.id)) {
+        newIds.delete(token.id)
+      } else {
+        newIds.add(token.id)
+      }
+      if (newIds.size === 0) {
+        setSelectionMode(false)
+      }
+      return newIds
+    })
+  }
+
+  const handleClearSelection = () => {
+    setSelectedTokenIds(new Set())
+    setSelectionMode(false)
+  }
+
+  const handleSelectAll = () => {
+    const allIds = new Set(getProcessedTokens().map(t => t.id))
+    setSelectedTokenIds(allIds)
+    setSelectionMode(true)
+  }
+
+  const handleBulkRevoke = () => {
+    setBulkAction('revoke')
+    setBulkConfirmDialogOpen(true)
+  }
+
+  const handleBulkRefresh = () => {
+    setBulkAction('refresh')
+    setBulkConfirmDialogOpen(true)
+  }
+
+  const handleBulkDelete = () => {
+    setBulkAction('delete')
+    setBulkConfirmDialogOpen(true)
+  }
+
+  const handleBulkExport = () => {
+    const selectedTokens = tokensList.filter(t => selectedTokenIds.has(t.id))
+    downloadSelectedTokensBackup(selectedTokens)
+    toast.success(`Exported ${selectedTokens.length} token${selectedTokens.length !== 1 ? 's' : ''}`, {
+      description: 'Backup file has been downloaded'
+    })
+  }
+
+  const handleConfirmBulkAction = () => {
+    const selectedTokens = tokensList.filter(t => selectedTokenIds.has(t.id))
+    const activeSelectedTokens = selectedTokens.filter(t => t.status === 'active')
+
+    if (bulkAction === 'revoke') {
+      activeSelectedTokens.forEach(token => {
+        const newEvent: SecurityEvent = {
+          id: uuidv4(),
+          type: 'revoked',
+          tokenId: token.id,
+          tokenName: token.name,
+          timestamp: new Date().toISOString(),
+          details: `Token revoked via bulk operation`,
+        }
+        setEvents((currentEvents) => [newEvent, ...(currentEvents || [])])
+      })
+
+      setTokens((currentTokens) =>
+        (currentTokens || []).map((t) =>
+          selectedTokenIds.has(t.id) && t.status === 'active'
+            ? { ...t, status: 'revoked' as const }
+            : t
+        )
+      )
+
+      toast.success(`Revoked ${activeSelectedTokens.length} token${activeSelectedTokens.length !== 1 ? 's' : ''}`)
+    } else if (bulkAction === 'refresh') {
+      activeSelectedTokens.forEach(token => {
+        const newEvent: SecurityEvent = {
+          id: uuidv4(),
+          type: 'refreshed',
+          tokenId: token.id,
+          tokenName: token.name,
+          timestamp: new Date().toISOString(),
+          details: `Token refreshed via bulk operation with new value and extended expiration (30 days)`,
+        }
+        setEvents((currentEvents) => [newEvent, ...(currentEvents || [])])
+      })
+
+      setTokens((currentTokens) =>
+        (currentTokens || []).map((t) =>
+          selectedTokenIds.has(t.id) && t.status === 'active'
+            ? {
+                ...t,
+                value: refreshTokenValue(t.value),
+                expiresAt: getExpirationDate(30),
+                status: 'active' as const,
+              }
+            : t
+        )
+      )
+
+      toast.success(`Refreshed ${activeSelectedTokens.length} token${activeSelectedTokens.length !== 1 ? 's' : ''}`, {
+        description: 'All tokens refreshed with new values and extended expiration by 30 days'
+      })
+    } else if (bulkAction === 'delete') {
+      setTokens((currentTokens) =>
+        (currentTokens || []).filter((t) => !selectedTokenIds.has(t.id))
+      )
+
+      toast.success(`Deleted ${selectedTokens.length} token${selectedTokens.length !== 1 ? 's' : ''}`, {
+        description: 'Tokens permanently removed from vault'
+      })
+    }
+
+    handleClearSelection()
+    setBulkConfirmDialogOpen(false)
+    setBulkAction(null)
+  }
+
+  const handleToggleSelectionMode = () => {
+    if (selectionMode) {
+      handleClearSelection()
+    } else {
+      setSelectionMode(true)
+    }
+  }
+
   const getProcessedTokens = () => {
     return tokensList.map((token) => {
       if (token.status === 'active' && isTokenExpired(token.expiresAt)) {
@@ -367,6 +501,10 @@ function App() {
                         Import Vault Data
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleToggleSelectionMode}>
+                        <CheckSquare weight="duotone" className="mr-2" />
+                        {selectionMode ? 'Exit' : 'Enter'} Bulk Mode
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setActiveTab('analytics')}>
                         <ChartBar weight="duotone" className="mr-2" />
                         View Analytics
@@ -456,6 +594,9 @@ function App() {
                       onRevoke={handleRevokeToken}
                       onRefresh={handleRefreshToken}
                       index={index}
+                      isSelected={selectedTokenIds.has(token.id)}
+                      onToggleSelection={handleToggleSelection}
+                      selectionMode={selectionMode}
                     />
                   ))}
                 </div>
@@ -515,6 +656,25 @@ function App() {
         open={listForSaleDialogOpen}
         onOpenChange={setListForSaleDialogOpen}
         onList={handleConfirmListing}
+      />
+
+      <BulkActionsBar
+        selectedTokens={tokensList.filter(t => selectedTokenIds.has(t.id))}
+        onClearSelection={handleClearSelection}
+        onSelectAll={handleSelectAll}
+        onBulkRevoke={handleBulkRevoke}
+        onBulkRefresh={handleBulkRefresh}
+        onBulkDelete={handleBulkDelete}
+        onBulkExport={handleBulkExport}
+        totalTokens={getProcessedTokens().length}
+      />
+
+      <BulkConfirmationDialog
+        open={bulkConfirmDialogOpen}
+        onOpenChange={setBulkConfirmDialogOpen}
+        onConfirm={handleConfirmBulkAction}
+        action={bulkAction}
+        tokens={tokensList.filter(t => selectedTokenIds.has(t.id))}
       />
     </div>
   )

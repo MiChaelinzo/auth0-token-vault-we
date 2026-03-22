@@ -27,6 +27,30 @@ export function exportVaultData(
   return JSON.stringify(backup, null, 2)
 }
 
+export function exportSelectedTokens(tokens: Token[]): string {
+  const data = {
+    version: '1.0.0',
+    exportDate: new Date().toISOString(),
+    tokens,
+    count: tokens.length,
+  }
+
+  return JSON.stringify(data, null, 2)
+}
+
+export function downloadSelectedTokensBackup(tokens: Token[]) {
+  const data = exportSelectedTokens(tokens)
+  const blob = new Blob([data], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `selected-tokens-${tokens.length}-${new Date().toISOString().split('T')[0]}.json`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 export function downloadVaultBackup(
   tokens: Token[],
   events: SecurityEvent[],

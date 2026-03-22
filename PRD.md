@@ -103,6 +103,13 @@ This app manages personal tokens, facilitates marketplace transactions, handles 
 - **Progression**: Export: Click export → JSON file downloads with timestamp | Import: Click import → Choose file → Validate format → Restore data → Success confirmation
 - **Success Criteria**: Export includes all tokens, events, transactions, and balance; Import validates format and handles errors gracefully
 
+### Bulk Token Operations
+- **Functionality**: Select multiple tokens and perform batch operations (revoke, refresh, delete, export)
+- **Purpose**: Enable efficient management of multiple tokens simultaneously, saving time for users with many tokens
+- **Trigger**: Click "Enter Bulk Mode" in quick actions dropdown menu
+- **Progression**: Enable bulk mode → Checkboxes appear on token cards → Select tokens individually or click "Select All" → Bulk actions bar appears at bottom → Choose action (Revoke/Refresh/Delete/Export) → Confirmation dialog shows affected tokens → Confirm → Batch operation executes → Success notification with count → Selection cleared
+- **Success Criteria**: Selection state persists across interactions, bulk actions only affect eligible tokens (e.g., only active tokens can be revoked/refreshed), confirmation dialog clearly shows which tokens will be affected, operations complete atomically, appropriate security events are logged for each token
+
 ## Edge Case Handling
 - **Empty States**: First-time users see welcoming onboarding with clear "Create First Token" CTA and explanation of Token Vault benefits
 - **Empty Marketplace**: When no listings available, show empty state encouraging users to list their tokens
@@ -119,6 +126,11 @@ This app manages personal tokens, facilitates marketplace transactions, handles 
 - **Long Token Values**: Truncate with ellipsis and provide copy button, never break layout
 - **No Tokens**: Show compelling empty state with illustration and clear next steps
 - **Price Validation**: Prevent negative prices, extremely high prices (cap at 10,000), or zero-price listings
+- **Bulk Selection Mode**: When no tokens selected in bulk mode, actions bar doesn't appear; selecting tokens automatically enables bulk mode
+- **Bulk Operations on Mixed Status**: Only active tokens can be revoked/refreshed, inactive tokens are skipped with clear warning message
+- **Bulk Delete**: Works on any status, confirmation shows all tokens to be deleted
+- **Bulk Export**: Exports selected tokens regardless of status, downloads separate file with count in filename
+- **Empty Bulk Selection**: Clear selection button exits bulk mode, selection persists when switching tabs
 
 ## Design Direction
 The design should evoke trust, sophistication, and technological precision - like a high-security control center meets modern fintech trading platform. Think dark terminals with glowing accents, crisp typography, and subtle neon highlights that communicate both security and cutting-edge technology. The marketplace section should feel vibrant and active with price tags, ratings, and trending indicators that suggest a thriving economy.

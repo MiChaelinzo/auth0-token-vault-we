@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Token } from '@/lib/types'
 import { getTokenStatusColor, formatRelativeTime, isTokenExpired, isTokenExpiringSoon, getTokenTypeIcon, canRefreshToken } from '@/lib/token-utils'
 import { Clock, Copy, Key, Trash, Eye, ArrowClockwise } from '@phosphor-icons/react'
@@ -13,9 +14,12 @@ interface TokenCardProps {
   onRevoke: (token: Token) => void
   onRefresh?: (token: Token) => void
   index: number
+  isSelected?: boolean
+  onToggleSelection?: (token: Token) => void
+  selectionMode?: boolean
 }
 
-export function TokenCard({ token, onView, onRevoke, onRefresh, index }: TokenCardProps) {
+export function TokenCard({ token, onView, onRevoke, onRefresh, index, isSelected = false, onToggleSelection, selectionMode = false }: TokenCardProps) {
   const isExpired = isTokenExpired(token.expiresAt)
   const isExpiringSoon = isTokenExpiringSoon(token.expiresAt)
   const canRefresh = canRefreshToken(token)
@@ -30,6 +34,21 @@ export function TokenCard({ token, onView, onRevoke, onRefresh, index }: TokenCa
     return Math.max(0, Math.min(100, 100 - (elapsed / total) * 100))
   }
 
+  const handleCardClick = () => {
+    if (selectionMode && onToggleSelection) {
+      onToggleSelection(token)
+    } else {
+      onView(token)
+    }
+  }
+
+  const handleCheckboxChange = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (onToggleSelection) {
+      onToggleSelection(token)
+    }
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -37,21 +56,33 @@ export function TokenCard({ token, onView, onRevoke, onRefresh, index }: TokenCa
       transition={{ delay: index * 0.05, duration: 0.3 }}
     >
       <Card 
-        className="token-glow border-border/50 hover:border-primary/50 transition-all duration-300 cursor-pointer group bg-card/50 backdrop-blur-sm"
-        onClick={() => onView(token)}
+        className={`token-glow border-border/50 hover:border-primary/50 transition-all duration-300 cursor-pointer group bg-card/50 backdrop-blur-sm ${
+          isSelected ? 'ring-2 ring-primary border-primary' : ''
+        }`}
+        onClick={handleCardClick}
       >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">{getTokenTypeIcon(token.type)}</span>
-                <Badge variant="outline" className="capitalize text-xs">
-                  {token.type}
-                </Badge>
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              {selectionMode && (
+                <div onClick={handleCheckboxChange}>
+                  <Checkbox
+                    checked={isSelected}
+                    className="w-5 h-5"
+                  />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">{getTokenTypeIcon(token.type)}</span>
+                  <Badge variant="outline" className="capitalize text-xs">
+                    {token.type}
+                  </Badge>
+                </div>
+                <CardTitle className="text-lg font-semibold tracking-tight truncate">
+                  {token.name}
+                </CardTitle>
               </div>
-              <CardTitle className="text-lg font-semibold tracking-tight truncate">
-                {token.name}
-              </CardTitle>
             </div>
             <Badge 
               variant="outline" 
