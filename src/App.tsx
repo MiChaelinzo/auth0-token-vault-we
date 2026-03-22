@@ -18,6 +18,7 @@ import { TokenAnalytics } from '@/components/TokenAnalytics'
 import { ListForSaleDialog } from '@/components/ListForSaleDialog'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { BulkConfirmationDialog } from '@/components/BulkConfirmationDialog'
+import { BulkFilterBar } from '@/components/BulkFilterBar'
 import { LockKey, Plus, ShieldCheck, MagnifyingGlass, Storefront, Receipt, CurrencyDollar, Wallet, DotsThree, DownloadSimple, UploadSimple, ChartBar, CheckSquare } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
@@ -437,6 +438,11 @@ function App() {
     }
   }
 
+  const handleFilterSelect = (tokenIds: string[]) => {
+    setSelectedTokenIds(new Set(tokenIds))
+    setSelectionMode(true)
+  }
+
   const getProcessedTokens = () => {
     return tokensList.map((token) => {
       if (token.status === 'active' && isTokenExpired(token.expiresAt)) {
@@ -564,7 +570,7 @@ function App() {
             </TabsList>
 
             <TabsContent value="vault" className="space-y-6">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-wrap">
                 <div className="relative flex-1 max-w-md">
                   <MagnifyingGlass 
                     weight="duotone" 
@@ -578,6 +584,11 @@ function App() {
                     className="pl-10 bg-card/50 border-border/50"
                   />
                 </div>
+                <BulkFilterBar
+                  tokens={getProcessedTokens()}
+                  onFilterSelect={handleFilterSelect}
+                  selectedCount={selectedTokenIds.size}
+                />
               </div>
 
               {filteredTokens.length === 0 ? (
