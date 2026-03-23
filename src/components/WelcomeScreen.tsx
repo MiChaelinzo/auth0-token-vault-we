@@ -1,21 +1,23 @@
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { LockKey, ShieldCheck, Storefront, ChartBar, Plu
+import { Card, CardContent } from '@/components/ui/card'
 import { LockKey, ShieldCheck, Storefront, ChartBar, Plus, Sparkle } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 
 interface WelcomeScreenProps {
-}
+  onComplete: () => void
   onCreateToken: () => void
+  onUseTemplate: () => void
+}
 
- 
-
-            initial={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-
-              <Lo
-    {
-      content: (
+export function WelcomeScreen({ onComplete, onCreateToken, onUseTemplate }: WelcomeScreenProps) {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-5xl w-full space-y-12"
+      >
         <div className="text-center space-y-6">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -40,7 +42,7 @@ interface WelcomeScreenProps {
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
               Your secure platform for managing, trading, and monitoring API tokens and credentials
-              <h
+            </p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6 mt-12">
@@ -52,19 +54,19 @@ interface WelcomeScreenProps {
             >
               <div className="flex justify-center">
                 <LockKey weight="duotone" className="w-10 h-10 text-primary" />
-              </p>
+              </div>
               <h3 className="font-semibold text-lg text-center">Secure Storage</h3>
               <p className="text-sm text-muted-foreground text-center">
                 Store and manage all your API tokens in one encrypted vault
-              tran
+              </p>
             </motion.div>
 
             <motion.div
-              <h3 className="font-semibold te
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
               className="space-y-3 p-5 rounded-lg bg-card/30 backdrop-blur-sm border border-border/50"
-        </div
+            >
               <div className="flex justify-center">
                 <Storefront weight="duotone" className="w-10 h-10 text-chart-2" />
               </div>
@@ -74,8 +76,8 @@ interface WelcomeScreenProps {
               </p>
             </motion.div>
 
-              initial={
-              transition={{ delay: 0.2 }}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
               className="space-y-3 p-5 rounded-lg bg-card/30 backdrop-blur-sm border border-border/50"
@@ -86,149 +88,79 @@ interface WelcomeScreenProps {
               <h3 className="font-semibold text-lg text-center">Analytics Dashboard</h3>
               <p className="text-sm text-muted-foreground text-center">
                 Monitor token usage and track security events in real-time
-                  
-            </motion.div>
-                
-        </div>
-        
-    },
-     
-            </mo
-        <div className="text-center space-y-4">
-              initial
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-              onClick={() => {
-          >
-              }}
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                <CardContent className="p-6">
-            </p>
-            <button
-
-          <div className="grid gap-4 mt-12 max-w-2xl mx-auto">
-            <motion.div
-            />
-        </div>
-        {currentStep < steps.length - 1 &
-            initial={{ opacity: 0 }}
-            transition={{ delay: 0.5 }}
-              onClick={() => {
-                onCreateToken()
-              onClick={() =>
-              Ne
-            >
-      </div>
-                <CardContent className="p-6">
-
-
-
-                    </div>
-
-
-
-
-
-                    </div>
-
-                </CardContent>
-
-            </motion.div>
-
-
-
-
-
-
-
-
-                onUseTemplate()
-
-
-            >
-
-
-
-                    <div className="rounded-lg bg-accent/10 p-3">
-
-
-
-
-
-
-
-
-
-                </CardContent>
-
+              </p>
             </motion.div>
           </div>
+        </div>
 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="space-y-6"
+        >
+          <h2 className="text-2xl font-semibold text-center">Get Started</h2>
+          
+          <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <Card className="border-primary/50 bg-card/50 backdrop-blur-sm hover:border-primary transition-colors">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="rounded-lg bg-primary/10 p-3 w-fit mx-auto">
+                    <Plus weight="duotone" className="w-8 h-8 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg text-center">Create Custom Token</h3>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Build a token from scratch with custom scopes and settings
+                    </p>
+                  </div>
+                  <Button 
+                    className="w-full bg-primary hover:bg-primary/90"
+                    onClick={onCreateToken}
+                  >
+                    <Plus weight="bold" className="mr-2" />
+                    Create Token
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
+            <Card className="border-accent/50 bg-card/50 backdrop-blur-sm hover:border-accent transition-colors">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="rounded-lg bg-accent/10 p-3 w-fit mx-auto">
+                    <Sparkle weight="duotone" className="w-8 h-8 text-accent" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg text-center">Use Template</h3>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Quick start with pre-configured templates for popular services
+                    </p>
+                  </div>
+                  <Button 
+                    className="w-full border-accent/50 text-accent hover:bg-accent/10"
+                    variant="outline"
+                    onClick={onUseTemplate}
+                  >
+                    <Sparkle weight="duotone" className="mr-2" />
+                    Browse Templates
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ),
-
-  ]
-
-
-
-  return (
-
-
-
-          key={currentStep}
-
-          animate={{ opacity: 1, x: 0 }}
-
-          transition={{ duration: 0.3 }}
-
-          {currentStepData.content}
-
-
-
-          {steps.map((_, index) => (
-
-              key={index}
-
-              className={
-
-
-
-              }
-
-
-
-
-
-          <motion.div
-
-            animate={{ opacity: 1 }}
-
-            className="text-center"
-
-            <Button
-
-
-
+          <div className="text-center">
+            <Button 
+              variant="ghost" 
+              onClick={onComplete}
+              className="text-muted-foreground hover:text-foreground"
             >
-
+              Skip and explore
             </Button>
-
-        )}
-
+          </div>
+        </motion.div>
+      </motion.div>
     </div>
-
+  )
 }
