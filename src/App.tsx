@@ -11,6 +11,7 @@ import { CreateTokenDialog } from '@/components/CreateTokenDialog'
 import { TokenDetailsDialog } from '@/components/TokenDetailsDialog'
 import { SecurityDashboard } from '@/components/SecurityDashboard'
 import { EmptyState } from '@/components/EmptyState'
+import { WelcomeScreen } from '@/components/WelcomeScreen'
 import { MarketplaceBrowse } from '@/components/MarketplaceBrowse'
 import { PurchaseDialog } from '@/components/PurchaseDialog'
 import { TransactionsView } from '@/components/TransactionsView'
@@ -40,6 +41,7 @@ function App() {
     totalEarnings: 0,
     totalSpent: 0,
   })
+  const [hasSeenWelcome, setHasSeenWelcome] = useKV<boolean>('has-seen-welcome', false)
   
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
@@ -521,6 +523,35 @@ function App() {
     if (!a.favorite && b.favorite) return 1
     return 0
   })
+
+  if (!hasSeenWelcome) {
+    return (
+      <>
+        <Toaster position="top-right" />
+        <WelcomeScreen
+          onComplete={() => setHasSeenWelcome(true)}
+          onCreateToken={() => {
+            setHasSeenWelcome(true)
+            setCreateDialogOpen(true)
+          }}
+          onUseTemplate={() => {
+            setHasSeenWelcome(true)
+            setTemplatesDialogOpen(true)
+          }}
+        />
+        <CreateTokenDialog
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          onCreateToken={handleCreateToken}
+        />
+        <TokenTemplatesDialog
+          open={templatesDialogOpen}
+          onOpenChange={setTemplatesDialogOpen}
+          onSelectTemplate={handleSelectTemplate}
+        />
+      </>
+    )
+  }
 
   return (
     <div className="min-h-screen">
