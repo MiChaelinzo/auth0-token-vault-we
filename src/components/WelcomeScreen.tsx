@@ -1,19 +1,19 @@
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { motion, AnimatePresence } from 'framer
+import { motion, AnimatePresence } from 'framer-motion'
 import { LockKey, ShieldCheck, Storefront, ChartBar, ArrowRight, CheckCircle, Sparkle } from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
+
+interface WelcomeScreenProps {
+  onComplete: () => void
   onCreateToken: () => void
+  onUseTemplate: () => void
+}
 
-export function WelcomeScreen(
+export function WelcomeScreen({ onComplete, onCreateToken, onUseTemplate }: WelcomeScreenProps) {
+  const [currentStep, setCurrentStep] = useState(0)
 
-  onCreateToken: () => void
-      subtitle: 'Your secur
- 
-
-          </p>
-          <div className="grid md:grid-cols-3 gap-4
-
-              tra
+  const steps = [
     {
       title: 'Welcome to Token Vault',
       subtitle: 'Your secure hub for API token management',
@@ -25,10 +25,10 @@ export function WelcomeScreen(
           </p>
           
           <div className="grid md:grid-cols-3 gap-4 pt-4">
-              </p>
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
-              initial={{ opacity: 0, y: 20 }
-              transition={{ delay: 0.2 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
               className="space-y-3 p-5 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-colors"
             >
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -36,15 +36,15 @@ export function WelcomeScreen(
               </div>
               <h3 className="font-semibold text-lg">Secure Storage</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Military-grade encryption keeps your tokens safe with Auth0 security standards
+                Military-grade encryption keeps your tokens safe with enterprise security standards
               </p>
             </motion.div>
 
-            transition=
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
-              <CheckCircle weight="duotone" 
-              transition={{ delay: 0.3 }}
-              <p className="text-sm text-muted-foreground">
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-3 p-5 rounded-xl bg-background/50 border border-border/50 hover:border-accent/50 transition-colors"
             >
               <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
                 <Storefront weight="duotone" className="w-7 h-7 text-accent" />
@@ -55,26 +55,26 @@ export function WelcomeScreen(
               </p>
             </motion.div>
 
-              <CheckCir
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-          >
+              transition={{ delay: 0.3 }}
               className="space-y-3 p-5 rounded-xl bg-background/50 border border-border/50 hover:border-chart-2/50 transition-colors"
-            <
+            >
               <div className="w-12 h-12 rounded-lg bg-chart-2/10 flex items-center justify-center">
                 <ChartBar weight="duotone" className="w-7 h-7 text-chart-2" />
               </div>
-          <motion.div
+              <h3 className="font-semibold text-lg">Real-Time Analytics</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Monitor usage patterns, track security events, and optimize your API strategy
               </p>
             </motion.div>
           </div>
-              
+        </div>
       ),
-
+    },
     {
-            transition={{ delay: 
+      title: 'Powerful Features',
       subtitle: 'Everything you need to manage tokens like a pro',
       icon: Sparkle,
       content: (
@@ -84,27 +84,27 @@ export function WelcomeScreen(
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
             className="flex gap-4 p-4 rounded-lg bg-background/30 border border-border/30"
-           
+          >
             <div className="flex-shrink-0">
               <CheckCircle weight="duotone" className="w-6 h-6 text-success" />
             </div>
-            </div>
+            <div className="space-y-1">
               <h4 className="font-semibold">Token Refresh</h4>
-    },
+              <p className="text-sm text-muted-foreground">
                 Automatically renew expiring tokens without losing history or configuration
               </p>
             </div>
-            <motion.div
+          </motion.div>
 
-              whileHo
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             className="flex gap-4 p-4 rounded-lg bg-background/30 border border-border/30"
           >
-                    </div>
+            <div className="flex-shrink-0">
               <CheckCircle weight="duotone" className="w-6 h-6 text-success" />
-                  
+            </div>
             <div className="space-y-1">
               <h4 className="font-semibold">Scope Control</h4>
               <p className="text-sm text-muted-foreground">
@@ -114,31 +114,31 @@ export function WelcomeScreen(
           </motion.div>
 
           <motion.div
-                onCreateToken()
-            animate={{ opacity: 1, x: 0 }}
-                <CardContent className=
-            className="flex gap-4 p-4 rounded-lg bg-background/30 border border-border/30"
-           
-            <div className="flex-shrink-0">
-                    <p className="text-sm text-muted-foreground leading-relaxed
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-semibold">Bulk Operations</h4>
-                </CardContent>
-                Manage multiple tokens at once with bulk revoke, refresh, and export
-
-            </div>
-          </motion.div>
-
-              Skip an
             initial={{ opacity: 0, x: -20 }}
-      ),
-            transition={{ delay: 0.4 }}
-  const currentStepData = steps[currentStep]
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex gap-4 p-4 rounded-lg bg-background/30 border border-border/30"
           >
             <div className="flex-shrink-0">
               <CheckCircle weight="duotone" className="w-6 h-6 text-success" />
-          animate=
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-semibold">Bulk Operations</h4>
+              <p className="text-sm text-muted-foreground">
+                Manage multiple tokens at once with bulk revoke, refresh, and export
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex gap-4 p-4 rounded-lg bg-background/30 border border-border/30"
+          >
+            <div className="flex-shrink-0">
+              <CheckCircle weight="duotone" className="w-6 h-6 text-success" />
+            </div>
             <div className="space-y-1">
               <h4 className="font-semibold">Security Dashboard</h4>
               <p className="text-sm text-muted-foreground">
@@ -152,73 +152,73 @@ export function WelcomeScreen(
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
             className="flex gap-4 p-4 rounded-lg bg-background/30 border border-border/30"
-           
+          >
             <div className="flex-shrink-0">
               <CheckCircle weight="duotone" className="w-6 h-6 text-success" />
             </div>
             <div className="space-y-1">
               <h4 className="font-semibold">Marketplace Trading</h4>
-                      <p className="text-muted-foreground t
+              <p className="text-sm text-muted-foreground">
                 Buy, sell, and trade tokens with secure escrow and instant delivery
-                  
+              </p>
             </div>
-              </Animate
+          </motion.div>
 
-                  {st
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 }}
-                          : 'bg-muted w-2'
+            className="flex gap-4 p-4 rounded-lg bg-background/30 border border-border/30"
           >
             <div className="flex-shrink-0">
               <CheckCircle weight="duotone" className="w-6 h-6 text-success" />
-                  
+            </div>
             <div className="space-y-1">
-                <div className="flex gap-3">
+              <h4 className="font-semibold">Data Export/Import</h4>
               <p className="text-sm text-muted-foreground">
                 Full vault backups with one-click export and import functionality
               </p>
-                  
+            </div>
           </motion.div>
-              
+        </div>
       ),
-      
+    },
     {
-            </CardContent>
+      title: 'Get Started',
       subtitle: 'Choose how you want to begin',
       icon: LockKey,
       content: (
         <div className="space-y-8 max-w-2xl mx-auto">
           <div className="grid md:grid-cols-2 gap-4">
-
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
               whileHover={{ scale: 1.02 }}
               className="cursor-pointer"
-
+              onClick={() => {
                 onComplete()
-
+                onUseTemplate()
               }}
-
+            >
               <Card className="h-full border-accent/50 bg-accent/5 hover:bg-accent/10 transition-colors">
-
+                <CardContent className="pt-8 pb-8 text-center space-y-4">
                   <div className="flex justify-center">
                     <div className="w-16 h-16 rounded-xl bg-accent/20 flex items-center justify-center">
                       <Sparkle weight="duotone" className="w-9 h-9 text-accent" />
-
+                    </div>
                   </div>
-
+                  <div className="space-y-2">
                     <h3 className="text-xl font-bold">Use a Template</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       Start with pre-configured tokens for popular services like GitHub, Stripe, and more
-
+                    </p>
                   </div>
                   <Button variant="outline" className="w-full border-accent text-accent hover:bg-accent hover:text-accent-foreground">
                     Browse Templates
                     <ArrowRight weight="bold" className="ml-2" />
                   </Button>
-
+                </CardContent>
               </Card>
             </motion.div>
 
@@ -230,9 +230,9 @@ export function WelcomeScreen(
               className="cursor-pointer"
               onClick={() => {
                 onComplete()
-
+                onCreateToken()
               }}
-
+            >
               <Card className="h-full border-primary/50 bg-primary/5 hover:bg-primary/10 transition-colors">
                 <CardContent className="pt-8 pb-8 text-center space-y-4">
                   <div className="flex justify-center">
@@ -250,130 +250,87 @@ export function WelcomeScreen(
                     Create Token
                     <ArrowRight weight="bold" className="ml-2" />
                   </Button>
-
+                </CardContent>
               </Card>
-
+            </motion.div>
           </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+          <div className="text-center">
+            <Button variant="ghost" onClick={onComplete} className="text-muted-foreground">
+              Skip and explore on my own
+            </Button>
+          </div>
+        </div>
+      ),
+    },
+  ]
+
+  const currentStepData = steps[currentStep]
+  const Icon = currentStepData.icon
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-12"
+          >
+            <div className="text-center space-y-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1, type: 'spring' }}
+                className="flex justify-center"
+              >
+                <div className="relative">
+                  <Icon weight="duotone" className="w-20 h-20 text-primary" />
+                  <div className="absolute inset-0 blur-2xl bg-primary/30 rounded-full" />
+                </div>
+              </motion.div>
+
+              <div className="space-y-2">
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">{currentStepData.title}</h1>
+                <p className="text-muted-foreground text-lg">{currentStepData.subtitle}</p>
+              </div>
+            </div>
+
+            <div className="min-h-[400px] flex items-center justify-center">
+              {currentStepData.content}
+            </div>
+
+            <div className="flex items-center justify-between max-w-2xl mx-auto">
+              <div className="flex gap-3">
+                {steps.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-2 rounded-full transition-all ${
+                      index === currentStep
+                        ? 'bg-primary w-8'
+                        : index < currentStep
+                        ? 'bg-primary/50 w-2'
+                        : 'bg-muted w-2'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                {currentStep < steps.length - 1 && (
+                  <Button onClick={() => setCurrentStep((prev) => prev + 1)} size="lg">
+                    Next
+                    <ArrowRight weight="bold" className="ml-2" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  )
+}
