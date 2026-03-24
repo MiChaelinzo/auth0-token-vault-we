@@ -21,7 +21,9 @@ import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { BulkConfirmationDialog } from '@/components/BulkConfirmationDialog'
 import { BulkFilterBar } from '@/components/BulkFilterBar'
 import { TokenTemplatesDialog } from '@/components/TokenTemplatesDialog'
-import { LockKey, Plus, ShieldCheck, MagnifyingGlass, Storefront, Receipt, CurrencyDollar, Wallet, DotsThree, DownloadSimple, UploadSimple, ChartBar, CheckSquare, Sparkle, Star } from '@phosphor-icons/react'
+import { AIAgentPanel } from '@/components/AIAgentPanel'
+import { Auth0UserMenu } from '@/components/Auth0UserMenu'
+import { LockKey, Plus, ShieldCheck, MagnifyingGlass, Storefront, Receipt, CurrencyDollar, Wallet, DotsThree, DownloadSimple, UploadSimple, ChartBar, CheckSquare, Sparkle, Star, Robot } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { isTokenExpired, refreshTokenValue, getExpirationDate } from '@/lib/token-utils'
@@ -567,11 +569,13 @@ function App() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">Token Vault</h1>
-                <p className="text-sm text-muted-foreground">Secure Token Management & Marketplace</p>
+                <p className="text-sm text-muted-foreground">Secure Token Management & Marketplace · Powered by Auth0 Token Vault</p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
+              <Auth0UserMenu />
+
               <div className="flex items-center gap-2 bg-card/50 backdrop-blur-sm border border-border/50 px-4 py-2 rounded-lg">
                 <Wallet weight="duotone" className="w-5 h-5 text-chart-5" />
                 <div className="text-right">
@@ -654,6 +658,10 @@ function App() {
                 <LockKey weight="duotone" className="mr-2" />
                 My Vault ({activeTokens.length})
               </TabsTrigger>
+              <TabsTrigger value="ai-agents" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Robot weight="duotone" className="mr-2" />
+                AI Agents
+              </TabsTrigger>
               <TabsTrigger value="marketplace" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Storefront weight="duotone" className="mr-2" />
                 Marketplace ({listingsList.length})
@@ -727,6 +735,10 @@ function App() {
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="ai-agents">
+              <AIAgentPanel />
             </TabsContent>
 
             <TabsContent value="marketplace">

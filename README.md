@@ -1,8 +1,41 @@
 # 🔐 Token Vault Marketplace
 
-A comprehensive, enterprise-grade API token management platform with an integrated marketplace for buying, selling, and securely managing authentication tokens. Built with React, TypeScript, and powered by GitHub Spark.
+A comprehensive, enterprise-grade API token management platform with an integrated marketplace for buying, selling, and securely managing authentication tokens. Built with React, TypeScript, and powered by **Auth0 Token Vault for AI Agents**.
 
 > ⚠️ **Live Demo Notice**: The live demo environment may be unstable and is intended for demonstration and testing purposes only. Data persistence is not guaranteed, and the service may experience intermittent downtime. For production use, please deploy your own instance.
+
+## 🤖 Auth0 Token Vault for AI Agents
+
+This project integrates [Auth0 Token Vault](https://auth0.com/features/token-vault), enabling AI agents to securely access third-party APIs on behalf of authenticated users.
+
+### How It Works
+1. **User Authentication**: Users sign in via Auth0 (OAuth 2.0 / OpenID Connect)
+2. **Connected Accounts**: Users link external services (Google, GitHub, Slack, Salesforce, Microsoft) through Auth0's Connected Accounts
+3. **Secure Token Storage**: Auth0 Token Vault stores and manages OAuth tokens from connected providers
+4. **AI Agent Token Exchange**: AI agents request scoped tokens via OAuth 2.0 Token Exchange (RFC 8693) — Auth0 validates and issues provider-specific access tokens without exposing long-lived credentials
+5. **Third-Party API Calls**: Agents use the exchanged tokens to call external APIs (Calendar, GitHub, Slack, CRM) on the user's behalf
+
+### Key Features
+- **Auth0 Authentication**: Sign in/out with Auth0, user profile display
+- **Connected Accounts Management**: Link and manage external service accounts via Token Vault
+- **AI Agent Hub**: Run AI-powered actions that securely access your connected services
+- **Token Exchange**: Industry-standard OAuth 2.0 Token Exchange (RFC 8693) for secure credential delegation
+- **Activity Logging**: Full audit trail of all AI agent actions and token exchanges
+
+### Setup
+1. Create an Auth0 tenant at [manage.auth0.com](https://manage.auth0.com)
+2. Enable Token Vault in your Auth0 dashboard
+3. Register a SPA application and configure callback URLs
+4. Add third-party connections (Google, GitHub, etc.)
+5. Copy `.env.example` to `.env` and fill in your Auth0 credentials:
+   ```env
+   VITE_AUTH0_DOMAIN=your-tenant.auth0.com
+   VITE_AUTH0_CLIENT_ID=your-client-id
+   VITE_AUTH0_AUDIENCE=https://your-api-identifier
+   VITE_AUTH0_CALLBACK_URL=http://localhost:5173
+   ```
+
+> The app works without Auth0 credentials configured — Token Vault features are available in demo mode for evaluation.
 
 ## ✨ Features
 
@@ -84,6 +117,7 @@ A comprehensive, enterprise-grade API token management platform with an integrat
 - **Shadcn UI**: High-quality, accessible component library
 
 ### Key Libraries
+- **@auth0/auth0-react**: Auth0 SDK for React — authentication, Token Vault, and connected accounts
 - **@phosphor-icons/react**: Beautiful icon system (2.1k+ icons)
 - **framer-motion**: Production-ready animation library
 - **sonner**: Elegant toast notifications
@@ -162,12 +196,17 @@ This application is built with GitHub Spark and can be deployed as a Spark appli
 src/
 ├── components/          # React components
 │   ├── ui/             # Shadcn UI components
+│   ├── AIAgentPanel.tsx       # AI Agent Hub with Token Vault actions
+│   ├── Auth0UserMenu.tsx      # Auth0 login/logout/profile menu
+│   ├── ConnectedAccounts.tsx  # External account management
 │   ├── TokenCard.tsx   # Individual token display
 │   ├── CreateTokenDialog.tsx
 │   ├── MarketplaceBrowse.tsx
 │   ├── BulkActionsBar.tsx
 │   └── ...
 ├── lib/                # Utilities and types
+│   ├── auth0-config.ts        # Auth0 Token Vault configuration
+│   ├── token-vault-service.ts # Token Vault service layer
 │   ├── types.ts        # TypeScript interfaces
 │   ├── token-utils.ts  # Token operations
 │   ├── marketplace-utils.ts
@@ -178,6 +217,8 @@ src/
 ```
 
 ### Key Technologies
+- **Auth0 Token Vault**: Secure token storage and exchange for AI agents (RFC 8693)
+- **@auth0/auth0-react**: Authentication, connected accounts, and Token Vault integration
 - **Spark Runtime SDK**: `spark.kv` for persistence, `spark.llm` for AI features
 - **Form Management**: react-hook-form with Zod validation
 - **Date Handling**: date-fns for expiration calculations
@@ -190,4 +231,4 @@ The Spark Template files and resources from GitHub are licensed under the terms 
 
 ---
 
-**Built with ❤️ using GitHub Spark** | [Report Issues](../../issues) | [View Source](../../)
+**Built with ❤️ using GitHub Spark & Auth0 Token Vault** | [Auth0 Token Vault Docs](https://auth0.com/ai/docs/intro/token-vault) | [Report Issues](../../issues) | [View Source](../../)
