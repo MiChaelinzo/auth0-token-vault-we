@@ -106,7 +106,6 @@ export function getProvider(providerId: string): TokenVaultProvider | undefined 
  */
 export function buildConnectAccountUrl(
   providerId: string,
-  userId: string,
   returnTo?: string
 ): string {
   const params = new URLSearchParams({
